@@ -16,7 +16,7 @@ parse_prompt = ChatPromptTemplate.from_messages(
         (
             "system",
             "あなたは飲食店提案ボットの入力を解析します。"
-            "次のユーザー発話から『地名や駅名(area)』だけを JSON で抽出してください。",
+            "次のユーザー発話から『旅先(area)』だけを JSON で抽出してください。",
         ),
         ("human", "{user_query}"),
     ]
@@ -39,19 +39,20 @@ _HOTPEPPER_ENDPOINT = "http://webservice.recruit.co.jp/hotpepper/gourmet/v1/"
 
 
 def _call_hotpepper(
-    params: SearchParams, *, lunch_flag: int, count: int = 10
+    params: SearchParams, *, lunch_flag: int, count: int = 50
 ) -> List[Restaurant]:
     key = os.getenv("HOTPEPPER_API_KEY")
     if key is None:
         raise RuntimeError("HOTPEPPER_API_KEY が .env に設定されていません")
     payload = {
         "key": key,
+        "address": params.area,
         "format": "json",
         "count": count,
         "lunch": lunch_flag,
     }
-    if params.area:
-        payload["keyword"] = params.area
+    # if params.area:
+    #     payload["keyword"] = params.area
 
     res = requests.get(_HOTPEPPER_ENDPOINT, params=payload, timeout=10)
     res.raise_for_status()
@@ -76,8 +77,8 @@ def fetch_restaurants(state: ChatState) -> Dict[str, Any]:
         return {}
 
     # ★ 2 回呼び出してそれぞれ 3 件だけ使う
-    lunch_shops = _call_hotpepper(state.search_params, lunch_flag=1)[:3]
-    dinner_shops = _call_hotpepper(state.search_params, lunch_flag=0)[:3]
+    lunch_shops = _call_hotpepper(state.search_params, lunch_flag=1)
+    dinner_shops = _call_hotpepper(state.search_params, lunch_flag=0)
 
     return {
         "lunch_restaurants": lunch_shops,
@@ -96,6 +97,7 @@ answer_prompt = ChatPromptTemplate.from_messages(
             "▼ランチ候補(3件)\n{lunch_shops}\n\n"
             "▼ディナー候補(3件)\n{dinner_shops}\n\n"
             "それぞれをユーザーにわかりやすく紹介してください。\n"
+            "ランチ候補とディナー候補に同じ店舗を含めないでください。\n"
             "Powered by ホットペッパーグルメ Webサービス",
         ),
     ]
