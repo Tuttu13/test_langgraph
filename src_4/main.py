@@ -15,7 +15,7 @@ def main() -> None:
     # )
     # args = parser.parse_args()
 
-    args = "仙台で美味しいお店"
+    args = "渋谷で美味しいお店"
 
     # LangGraph を起動
     graph = build_graph()

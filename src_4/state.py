@@ -25,9 +25,19 @@ class Restaurant(BaseModel):
 class ChatState(BaseModel):
     """LangGraph 全体で共有するステート"""
 
+    # ① ユーザー入力と解析結果
     user_query: str = Field(..., description="ユーザー発話の原文")
     search_params: SearchParams = Field(default_factory=SearchParams)
-    restaurants: Annotated[List[Restaurant], operator.add] = Field(default_factory=list)
+
+    # ② API 取得結果（ランチ／ディナーを個別に格納）
+    lunch_restaurants: Annotated[List[Restaurant], operator.add] = Field(
+        default_factory=list, description="ランチ条件で取得した店舗リスト"
+    )
+    dinner_restaurants: Annotated[List[Restaurant], operator.add] = Field(
+        default_factory=list, description="ディナー条件で取得した店舗リスト"
+    )
+
+    # ③ 会話制御
     pending_question: Optional[str] = Field(
         None, description="足りない情報を尋ねるための質問"
     )
