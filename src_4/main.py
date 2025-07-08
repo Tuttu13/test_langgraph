@@ -1,8 +1,8 @@
 import argparse
 
 from dotenv import load_dotenv
+from models.state import ChatState
 
-from state import ChatState
 from workflow import build_graph
 
 load_dotenv()  # .env を読み込む
@@ -15,8 +15,8 @@ def main() -> None:
     # )
     # args = parser.parse_args()
 
-    args = "渋谷で美味しいお店"
-
+    args = "東京都渋谷区で美味しいお店"
+    print("【ユーザー要望】", args)
     # LangGraph を起動
     graph = build_graph()
     init_state = ChatState(user_query=args)

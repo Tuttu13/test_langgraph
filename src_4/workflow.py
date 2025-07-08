@@ -1,7 +1,7 @@
 from langgraph.graph import END, StateGraph
+from models.state import ChatState
 
 from nodes import fetch_restaurants, generate_answer, parse_user
-from state import ChatState
 
 
 def build_graph():

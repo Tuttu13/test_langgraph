@@ -5,8 +5,7 @@ import requests
 from langchain_core.output_parsers import PydanticOutputParser, StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
-
-from state import ChatState, Restaurant, SearchParams
+from models.state import ChatState, Restaurant, SearchParams
 
 # --- 1) ユーザー発話を構造化して検索パラメータを作る ----------------------------
 _llm_struct = ChatOpenAI(model="gpt-4o", temperature=0.0)
