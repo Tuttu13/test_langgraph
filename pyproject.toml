@@ -1,0 +1,7 @@
+[project]
+name = "TEM_PJ"
+version = "0.1.0"
+description = "My package description"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
