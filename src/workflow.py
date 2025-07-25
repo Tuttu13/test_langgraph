@@ -1,6 +1,7 @@
 # workflow.py
 # LangGraph を組み立てて compile する
 
+from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, StateGraph
 
 from nodes import answering_node, check_node, selection_node
@@ -22,4 +23,6 @@ def build_workflow() -> StateGraph:
     workflow.add_conditional_edges(
         "check", lambda s: s.current_judge, {True: END, False: "selection"}
     )
-    return workflow.compile()
+    memory = MemorySaver()
+    graph = workflow.compile(checkpointer=memory)
+    return graph

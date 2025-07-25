@@ -3,6 +3,7 @@
 
 from typing import Any
 
+from langchain_core.messages import AIMessage, AnyMessage, HumanMessage, SystemMessage
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 
@@ -31,7 +32,7 @@ def selection_node(state: State) -> dict[str, Any]:
         prompt | llm.with_config(configurable=dict(max_tokens=1)) | StrOutputParser()
     )
     role_number = chain.invoke(
-        {"role_options": role_options, "query": state.query}
+        {"role_options": role_options, "query": state.messages}
     ).strip()
     return {"current_role": ROLES[role_number]["name"]}
 
@@ -39,6 +40,7 @@ def selection_node(state: State) -> dict[str, Any]:
 def answering_node(state: State) -> dict[str, Any]:
     """選択されたロールとして回答を生成"""
     role_details = "\n".join(f"- {v['name']}: {v['details']}" for v in ROLES.values())
+
     prompt = ChatPromptTemplate.from_template(
         """あなたは{role}として回答してください。以下の質問に対して、あなたの役割に基づいた適切な回答を提供してください。
 
@@ -50,11 +52,25 @@ def answering_node(state: State) -> dict[str, Any]:
         回答:
         """
     )
+
     chain = prompt | llm | StrOutputParser()
-    answer = chain.invoke(
-        {"role": state.current_role, "role_details": role_details, "query": state.query}
+
+    # ── 直近のユーザーメッセージを取得 ──
+    last_user_msg: HumanMessage = next(
+        msg for msg in reversed(state.messages) if isinstance(msg, HumanMessage)
     )
-    return {"messages": [answer]}
+    question_text = last_user_msg.content
+
+    answer_text: str = chain.invoke(
+        {
+            "role": state.current_role,
+            "role_details": role_details,
+            "query": question_text,
+        }
+    )
+
+    # ── AIMessage で包んで返す ──
+    return {"messages": [AIMessage(content=answer_text)]}
 
 
 def check_node(state: State) -> dict[str, Any]:
@@ -69,6 +85,6 @@ def check_node(state: State) -> dict[str, Any]:
     )
     chain = prompt | llm.with_structured_output(Judgement)
     result: Judgement = chain.invoke(
-        {"query": state.query, "answer": state.messages[-1]}
+        {"query": state.messages, "answer": state.messages[-1]}
     )
     return {"current_judge": result.judge, "judgement_reason": result.reason}
