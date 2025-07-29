@@ -87,4 +87,8 @@ def check_node(state: State) -> dict[str, Any]:
     result: Judgement = chain.invoke(
         {"query": state.messages, "answer": state.messages[-1]}
     )
-    return {"current_judge": result.judge, "judgement_reason": result.reason}
+    return {
+        "messages": [SystemMessage(result.reason)],
+        "current_judge": result.judge,
+        "judgement_reason": result.reason,
+    }
